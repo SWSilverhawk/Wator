@@ -1,0 +1,132 @@
+#!/bin/bash
+#
+# \file watorscript
+# \author Simone Paioletti
+# Si dichiara che il contenuto di questo file e' in ogni sua parte opera
+# originale dell'autore.
+
+if [ $# -lt 1 ] || [ $# -gt 2 ]
+then
+    echo "Argomenti errati: '$0 --help' per informazioni" 1>&2
+    exit 1
+fi
+
+SQUALI=0
+PESCI=0
+FILE=0
+
+for i in $*
+do
+    case $i in
+    "--help")   case $# in
+                1) echo "Usage: $0 [-s file] [-f file] [--help]" 1>&2
+                   exit 1;;
+                2) echo "Argomenti errati: '$0 --help' per informazioni" 1>&2
+                   exit 1;;
+                esac;;
+    "-s")       case $# in
+                1) echo "Argomenti errati: '$0 --help' per informazioni" 1>&2
+                   exit 1;;
+                2) SQUALI=1;;
+                esac;;
+    "-f")       case $# in
+                1) echo "Argomenti errati: '$0 --help' per informazioni" 1>&2
+                   exit 1;;
+                2) PESCI=1;;
+                esac;;
+    *)          FILE=$i;;
+    esac
+done
+
+if [ $SQUALI -eq 0 ] && [ $PESCI -eq 0 ] && [ $# -eq 2 ]
+then
+    echo "Argomenti errati: '$0 --help' per informazioni" 1>&2
+    exit 1
+fi
+
+if [ ! -f $FILE ]
+    then
+    echo "Argomenti errati: '$0 --help' per informazioni" 1>&2
+    exit 1
+fi
+
+S_NUM=0
+F_NUM=0
+IFS=''
+
+if ! exec 3< $FILE
+then
+    echo "Impossibile aprire il file $FILE" 1>&2
+    exit 1
+fi
+
+read -u 3 RIGHE
+
+case $RIGHE in
+    ''|*[!0-9]*)    echo "NO" 1>&2
+                    exit 1;;
+    *)              :;;
+esac
+
+read -u 3 COLONNE
+
+case $COLONNE in
+    ''|*[!0-9]*)    echo "NO" 1>&2
+                    exit 1;;
+    *)              :;;
+esac
+
+for ((i=1; i<=$RIGHE; i++))
+do
+    for ((j=1; j<=$COLONNE; j++))
+    do
+        read -u 3 -n 1 CHAR
+        case $CHAR in
+        "W")    :;;
+        "S")    S_NUM=$[S_NUM+1];;
+        "F")    F_NUM=$[F_NUM+1];;
+        *)      echo "NO" 1>&2
+                exit 1;;
+        esac
+        if [ $j -lt $COLONNE ]
+        then
+            read -u 3 -n 1 CHAR
+            case $CHAR in
+            ' ')    :;;
+            *)      echo "NO" 1>&2
+                    exit 1;;
+            esac
+        else
+            read -u 3 -n 1 CHAR
+            case $CHAR in
+            '')    :;;
+            *)      echo "NO" 1>&2
+                    exit 1;;
+            esac
+        fi
+    done
+done
+
+if read -u 3 -n 1 CHAR
+then
+    echo "NO" 1>&2
+    exit 1
+fi
+
+exec 3>&-
+
+if [ $SQUALI -eq 1 ]
+    then
+        echo $S_NUM
+        exit
+fi
+
+if [ $PESCI -eq 1 ]
+    then
+        echo $F_NUM
+        exit
+fi
+
+echo "OK" 1>&2
+
+exit
